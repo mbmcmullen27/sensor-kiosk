@@ -2,6 +2,8 @@
 <html>
   <head>
     <script>
+      var sensor = {open: false};
+
       function launch() { 
         document
           .getElementById("video-frame")
@@ -17,14 +19,33 @@
         div.appendChild(frame)
       }
 
+      async function updateSensor() {
+        sensor = await fetch('http://localhost:8080/sensor').then(res=>res.json()) 
+      }
+      
+      function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+
       async function checkSensor() {
-        let data = await fetch('http://localhost:8080/sensor').then(res=>res.json()) 
-        console.log(data)
+        const canvas = document.getElementById('indicator')
+        const ctx = canvas.getContext('2d')
+        while (!sensor.open) {
+          await updateSensor()
+          console.log(sensor)
+          ctx.fillStyle = "rgb(200, 0, 0)"
+          ctx.fillRect(10,10,50,50)
+          await delay(500)
+        }
+        canvas.remove()
+        createFrame()
+        launch()
       }
     </script>
   </head>
-  <body>
+  <body onload="checkSensor()">
     <div id="frame"></div>
+    <canvas id="indicator" width="150" height="150">sensor indicator</canvas>
     <br/>
     <button type="button" onclick="createFrame()">Create</button>
     <button type="button" onclick="launch()">Launch</button>
