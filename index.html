@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      function launch() { 
+        document
+          .getElementById("video-frame")
+          .src = "https://www.youtube.com/embed/Iwn4LVVvAUQ?autoplay=1&mute=1&start=12&controls=0"
+      }
+
+      function createFrame(){
+        const frame = document.createElement("iframe")
+        frame.id = "video-frame"
+        frame.width = 420
+        frame.height = 315
+        const div = document.getElementById("frame")
+        div.appendChild(frame)
+      }
+
+      async function checkSensor() {
+        let data = await fetch('http://localhost:8080/sensor').then(res=>res.json()) 
+        console.log(data)
+      }
+    </script>
+  </head>
+  <body>
+    <div id="frame"></div>
+    <br/>
+    <button type="button" onclick="createFrame()">Create</button>
+    <button type="button" onclick="launch()">Launch</button>
+    <button type="button" onclick="checkSensor()">Check Sensor</button>
+  </body>
+</html>
