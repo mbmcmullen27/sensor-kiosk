@@ -1,8 +1,71 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <style>
+      body {
+        background-color: #43464b;
+      }
+
+      #space {
+        position: relative;
+      }
+
+      .frame-container {
+        position: relative;
+        padding-bottom: 56.25%; /* 16:9 */  
+        padding-top: 25px;
+        width: 400%; /* enlarge beyond browser width */
+        left: -150%; /* center */
+      }
+
+      .frame-container iframe {
+        position: absolute; 
+        top: 0;
+        left: 0; 
+        width: 100%; 
+        height: 100%;
+      }
+
+      .wrapper {
+        overflow: hidden;
+        max-width: 100%;
+        border-radius: 15px;
+      }
+
+      .canvas-container {
+        position: fixed; 
+        top: 50%; 
+        left: 50%; 
+        margin-top: -155px; 
+        margin-left: -265px; 
+        border-radius: 10px;
+        box-shadow: 0 0 0 13px rgb(255, 102, 0); 
+        border: 10px;
+        overflow: hidden;
+        width: 531px;
+        height: 323px;
+        visibility: hidden;
+      }
+
+      .launch-button {
+        z-index: 2;
+        position: absolute;
+        top: 15%;
+        left: 50%;
+        width: 175px;
+        height: 125px;
+        margin-left: -87px;
+        border-radius: 13px;
+        font-size: 25px;
+        font-weight: bold;
+        color: green;
+        border: 2px solid green;
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+      }
+    </style>
     <script>
-      var sensor = {open: false};
+      let width = 534, height = 326
+      var sensor = {open: true};
 
       function launch() { 
         document
@@ -11,44 +74,71 @@
       }
 
       function createFrame(){
+        const space = document.getElementById("space")
         const frame = document.createElement("iframe")
+        let computed = (window.innerHeight/2) - (height/2)
+        console.log(`innerheight = ${window.innerHeight}`)
+        console.log(`computed div height = ${computed}`)
+        space.style.height = `${height/4}px`
         frame.id = "video-frame"
-        frame.width = 420
-        frame.height = 315
+        frame.width = width
+        frame.height = height
         const div = document.getElementById("frame")
         div.appendChild(frame)
       }
 
       async function updateSensor() {
-        sensor = await fetch('http://localhost:8080/sensor').then(res=>res.json()) 
+        sensor = await fetch('http://10.1.0.10:8080/sensor').then(res=>res.json()) 
       }
       
       function delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
       }
 
+      async function initiate() {
+        document.getElementById('launch').remove()
+        document.getElementById('canvas').style.visibility="visible"
+        await checkSensor()
+      }
+
       async function checkSensor() {
         const canvas = document.getElementById('indicator')
         const ctx = canvas.getContext('2d')
-        while (!sensor.open) {
-          await updateSensor()
+        canvas.width = width
+        canvas.height = height
+        ctx.textAlign = "center"
+        ctx.font = "bold small-caps 30px verdana, sans-serif";
+        while (sensor.open) {
           console.log(sensor)
-          ctx.fillStyle = "rgb(200, 0, 0)"
-          ctx.fillRect(10,10,50,50)
+          ctx.fillStyle = "rgb(0, 0, 0)"
+          ctx.fillRect(0,0,width,height)
+          ctx.fillStyle = "#ff6700"
+          ctx.fillText("CLOSE HATCH", width/2, height/2)
           await delay(500)
+          
+          ctx.fillStyle = "#8b0000"
+          ctx.fillRect(0,0,width,height)
+          ctx.fillStyle = "#ff6700"
+          ctx.fillText("CLOSE HATCH", width/2, height/2)
+          await delay(500)
+          await updateSensor()
         }
         canvas.remove()
+        document.getElementById("canvas").remove()
         createFrame()
         launch()
       }
     </script>
   </head>
-  <body onload="checkSensor()">
-    <div id="frame"></div>
-    <canvas id="indicator" width="150" height="150">sensor indicator</canvas>
+  <body>
+    <button class="launch-button" id="launch" onclick="initiate()">INITIATE LAUNCH SEQUENCE</button>
+    <div class="canvas-container" id="canvas">
+      <canvas id="indicator">sensor indicator</canvas>
+    </div>
+    <div id="space"></div>
+    <div class="wrapper">
+      <div class="frame-container" id="frame"></div>
+    </div>
     <br/>
-    <button type="button" onclick="createFrame()">Create</button>
-    <button type="button" onclick="launch()">Launch</button>
-    <button type="button" onclick="checkSensor()">Check Sensor</button>
   </body>
 </html>
